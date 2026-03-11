@@ -7,8 +7,6 @@ Automation scripts for deploying and managing Microsoft Tunnel Gateway.
 - `setup-prerequisites-ubuntu.sh` - System prerequisites and package installation (Ubuntu)
 - `setup-auditing-ubuntu.sh` - Configure audit logging (Ubuntu)
 - `setup-firewall-ubuntu.sh` - Firewall configuration (Ubuntu)
-- `mst-mindcore-health.sh` - Health monitoring
-- `mst-mindcore-net-diag.sh` - Network diagnostics
 
 ## Compatibility
 

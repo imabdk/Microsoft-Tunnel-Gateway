@@ -4,6 +4,10 @@
 # Allow shell scripts
 !*.sh
 
+# Ignore mindcore scripts
+mst-mindcore-health.sh
+mst-mindcore-net-diag.sh
+
 # Allow README
 !README.md
 
