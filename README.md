@@ -19,9 +19,9 @@ Automation scripts for deploying and managing Microsoft Tunnel Gateway.
 sudo bash ./scriptname.sh
 ```
 
-## Documentation
+## More Information
 
-Full deployment guides available at [imab.dk](https://www.imab.dk)
+Read the blog post: [10 days and 10 tips for Microsoft Tunnel Gateway - Day 3](https://www.imab.dk/10-days-and-10-tips-for-microsoft-tunnel-gateway-day-3/)
 
 ## Author
 
