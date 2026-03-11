@@ -1,0 +1,11 @@
+# Ignore everything
+*
+
+# Allow shell scripts
+!*.sh
+
+# Allow README
+!README.md
+
+# Allow .gitignore itself
+!.gitignore
