@@ -5,7 +5,7 @@
 # Configures required inbound ports and enables firewall
 #
 # Note: This script is Ubuntu-specific (uses UFW)
-# Usage: curl -fsSL https://imab.dk/tunnel/setup-firewall-ubuntu.sh | sudo bash
+# Usage: curl -fsSL https://raw.githubusercontent.com/imabdk/Microsoft-Tunnel-Gateway/master/setup-firewall-ubuntu.sh | sudo bash
 #
 
 set -e
