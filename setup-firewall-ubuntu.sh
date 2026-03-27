@@ -6,7 +6,7 @@
 #
 # Note: This script is Ubuntu-specific (uses UFW)
 # Usage: curl -fsSL https://raw.githubusercontent.com/imabdk/Microsoft-Tunnel-Gateway/master/setup-firewall-ubuntu.sh | sudo bash
-# Custom port: sudo bash setup-firewall-ubuntu.sh 8443
+# Custom port: curl -fsSL https://raw.githubusercontent.com/imabdk/Microsoft-Tunnel-Gateway/master/setup-firewall-ubuntu.sh | sudo bash -s -- 8443
 #
 
 set -e
