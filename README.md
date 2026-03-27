@@ -4,6 +4,12 @@ Automation scripts for deploying and managing Microsoft Tunnel Gateway.
 
 ## Scripts
 
+### Health Check
+
+- `mst-tunnel-health.sh` - Post-installation health validation (service status, containers, certificates, logs, configuration, ports, connectivity)
+
+### Setup
+
 - `setup-prerequisites-ubuntu.sh` - System prerequisites and package installation (Ubuntu)
 - `setup-auditing-ubuntu.sh` - Configure audit logging (Ubuntu)
 - `setup-firewall-ubuntu.sh` - Firewall configuration (Ubuntu)
@@ -15,8 +21,24 @@ Automation scripts for deploying and managing Microsoft Tunnel Gateway.
 
 ## Usage
 
+### Health check (run on tunnel server)
+
 ```bash
-sudo bash ./scriptname.sh
+curl -fsSL https://raw.githubusercontent.com/imabdk/Microsoft-Tunnel-Gateway/main/mst-tunnel-health.sh | sudo bash
+```
+
+Or download and run locally:
+
+```bash
+sudo bash ./mst-tunnel-health.sh
+```
+
+### Setup scripts
+
+```bash
+sudo bash ./setup-prerequisites-ubuntu.sh
+sudo bash ./setup-auditing-ubuntu.sh
+sudo bash ./setup-firewall-ubuntu.sh
 ```
 
 ## More Information
