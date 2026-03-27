@@ -21,9 +21,6 @@
 #
 # Usage: sudo ./mst-mindcore-health.sh [--dns <hostname>]
 #        --dns (optional): test DNS resolution for this host against Tunnel DNS servers
-#
-# Download: curl -fsSL https://imab.dk/tunnel/mst-mindcore-health.sh | sudo bash
-#           curl ... | sudo bash -s -- --dns intranet.contoso.com
 ################################################################################
 
 RED='\033[0;31m'
