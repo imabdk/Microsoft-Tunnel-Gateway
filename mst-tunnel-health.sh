@@ -18,8 +18,7 @@
 #   4. Recent errors in logs (last 30 minutes)
 #   5. Server configuration (routes, DNS, ports)
 #   6. Listening ports (VPN port accessibility)
-#   7. External connectivity testing
-#   8. DNS resolution (tests DNS servers from Tunnel configuration)
+#   7. DNS resolution (tests DNS servers from Tunnel configuration)
 #
 # Usage: sudo ./mst-tunnel-health.sh [--dns <hostname>]
 #        --dns (optional): test DNS resolution for this host against Tunnel DNS servers
@@ -261,26 +260,8 @@ else
 fi
 echo ""
 
-# External connectivity testing info
-echo -e "${BLUE}[7] External Connectivity Testing${NC}"
-
-FQDN=""
-# Extract FQDN from certificate CN (primary source per MS docs)
-if [ -f "/etc/mstunnel/certs/site.crt" ]; then
-    FQDN=$(openssl x509 -noout -subject -in /etc/mstunnel/certs/site.crt 2>/dev/null | sed -n 's/.*CN = \([^,]*\).*/\1/p')
-fi
-
-if [ -n "$FQDN" ] && [ "$FQDN" != "null" ]; then
-    echo "Configured endpoint: $FQDN:$LISTEN_PORT (from certificate CN)"
-    echo ""
-    echo "Test inbound connectivity from external network:"
-    echo "  1. From external machine: openssl s_client -connect $FQDN:$LISTEN_PORT"
-    echo "  2. Online TLS checker: https://www.ssllabs.com/ssltest/analyze.html?d=$FQDN"
-else
-    echo "FQDN not found in certificate"
-fi
 # DNS resolution
-echo -e "${BLUE}[8] DNS Resolution${NC}"
+echo -e "${BLUE}[7] DNS Resolution${NC}"
 echo "Testing DNS servers from Tunnel configuration..."
 
 if [ -f "/etc/mstunnel/admin-settings.json" ]; then
@@ -335,6 +316,9 @@ if [ $ISSUES -eq 0 ]; then
 else
     echo -e "${YELLOW}Found $ISSUES issue(s)${NC}"
 fi
+echo ""
+echo "Test inbound connectivity from an external network:"
+echo "  openssl s_client -connect <tunnel-fqdn>:$LISTEN_PORT"
 echo "================================================================================"
 
 exit $ISSUES
