@@ -21,7 +21,7 @@
 #   7. External connectivity testing
 #
 # Usage: sudo ./mst-tunnel-health.sh
-# Download: curl -fsSL https://raw.githubusercontent.com/imabdk/Microsoft-Tunnel-Gateway/main/mst-tunnel-health.sh | sudo bash
+# Download: curl -fsSL https://raw.githubusercontent.com/imabdk/Microsoft-Tunnel-Gateway/refs/heads/master/mst-tunnel-health.sh | sudo bash
 ################################################################################
 
 RED='\033[0;31m'
