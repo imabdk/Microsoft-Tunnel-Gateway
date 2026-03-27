@@ -34,7 +34,11 @@ apt update
 apt install -y auditd audispd-plugins
 
 echo "[3/5] Downloading Microsoft Tunnel audit rules..."
-wget -q https://aka.ms/TunnelAuditdRules -O /tmp/mst.rules
+curl -fsSL https://aka.ms/TunnelAuditdRules -o /tmp/mst.rules
+if [ ! -s /tmp/mst.rules ]; then
+    echo "ERROR: Failed to download audit rules"
+    exit 1
+fi
 
 echo "[4/5] Installing audit rules..."
 cp /tmp/mst.rules /etc/audit/rules.d/mst.rules

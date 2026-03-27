@@ -6,6 +6,7 @@
 #
 # Note: This script is Ubuntu-specific (uses UFW)
 # Usage: curl -fsSL https://raw.githubusercontent.com/imabdk/Microsoft-Tunnel-Gateway/master/setup-firewall-ubuntu.sh | sudo bash
+# Custom port: sudo bash setup-firewall-ubuntu.sh 8443
 #
 
 set -e
@@ -36,14 +37,17 @@ SSH_PORT=$(grep -E "^Port\s+[0-9]+" /etc/ssh/sshd_config 2>/dev/null | awk '{pri
 SSH_PORT=${SSH_PORT:-22}
 echo "  SSH port: $SSH_PORT"
 
+# Tunnel port: use argument if provided, otherwise default to 443
+TUNNEL_PORT=${1:-443}
+
 echo "[3/6] Configuring firewall rules..."
-echo "  - Allowing TCP 443 (Tunnel inbound)"
-ufw allow 443/tcp comment 'Microsoft Tunnel TCP' 2>/dev/null || echo "    Rule already exists"
+echo "  - Allowing TCP $TUNNEL_PORT (Tunnel inbound)"
+ufw allow $TUNNEL_PORT/tcp comment 'Microsoft Tunnel TCP' 2>/dev/null || echo "    Rule already exists"
 
-echo "  - Allowing UDP 443 (Tunnel inbound)"
-ufw allow 443/udp comment 'Microsoft Tunnel UDP' 2>/dev/null || echo "    Rule already exists"
+echo "  - Allowing UDP $TUNNEL_PORT (Tunnel inbound)"
+ufw allow $TUNNEL_PORT/udp comment 'Microsoft Tunnel UDP' 2>/dev/null || echo "    Rule already exists"
 
-echo "  - Allowing TCP $SSH_PORT (SSH access)"
+echo "  - Allowing TCP $SSH_PORT (SSH access - always allowed)"
 ufw allow $SSH_PORT/tcp comment 'SSH access' 2>/dev/null || echo "    Rule already exists"
 
 echo "[4/6] Setting default policies..."
@@ -67,12 +71,13 @@ else
 fi
 
 echo "[6/6] Verifying configuration..."
-ufw status verbose
-
 echo ""
 echo "=========================================="
 echo "Firewall Configuration Complete"
 echo "=========================================="
+echo ""
+echo "Tunnel port: $TUNNEL_PORT (TCP+UDP)"
+echo "SSH port: $SSH_PORT (TCP)"
 echo ""
 ufw status numbered
 echo ""

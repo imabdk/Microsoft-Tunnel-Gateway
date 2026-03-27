@@ -22,19 +22,25 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-echo "[1/11] Updating system packages..."
+echo "[1/6] Updating system packages..."
 apt update && apt upgrade -y
 
-echo "[2/11] Installing required utilities..."
+echo "[2/6] Installing required utilities..."
+# jq is required by mst-readiness, others are for convenience
 apt install -y curl wget git nano jq net-tools ca-certificates
 
-echo "[3/11] Adding Docker's official GPG key..."
-install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-chmod a+r /etc/apt/keyrings/docker.asc
+echo "[3/6] Installing Docker Engine..."
+if command -v docker &> /dev/null; then
+    echo "  Docker is already installed: $(docker --version)"
+    echo "  Skipping Docker installation"
+else
+    echo "  Adding Docker's official GPG key..."
+    install -m 0755 -d /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+    chmod a+r /etc/apt/keyrings/docker.asc
 
-echo "[4/11] Adding Docker repository to Apt sources..."
-tee /etc/apt/sources.list.d/docker.sources > /dev/null <<EOF
+    echo "  Adding Docker repository to Apt sources..."
+    tee /etc/apt/sources.list.d/docker.sources > /dev/null <<EOF
 Types: deb
 URIs: https://download.docker.com/linux/ubuntu
 Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
@@ -42,13 +48,14 @@ Components: stable
 Signed-By: /etc/apt/keyrings/docker.asc
 EOF
 
-echo "[5/11] Updating package lists with Docker repository..."
-apt update
+    echo "  Updating package lists..."
+    apt update
 
-echo "[6/11] Installing Docker packages..."
-apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    echo "  Installing Docker packages..."
+    apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+fi
 
-echo "[7/11] Enabling IPv4 packet forwarding..."
+echo "[4/6] Enabling IPv4 packet forwarding..."
 # Check if already enabled
 CURRENT_FORWARD=$(sysctl -n net.ipv4.ip_forward)
 if [ "$CURRENT_FORWARD" -eq 1 ]; then
@@ -67,18 +74,15 @@ else
     echo "  IPv4 forwarding enabled"
 fi
 
-echo "[8/9] Verifying Docker installation..."
+echo "[5/6] Verifying Docker installation..."
 docker --version
-echo ""
 
-echo "[9/9] Setup verification..."
+echo "[6/6] Setup verification..."
 echo ""
 echo "=========================================="
 echo "Prerequisites Setup Complete"
 echo "=========================================="
 echo ""
-docker --version
-echo ""
-echo "IPv4 forwarding:"
-sysctl net.ipv4.ip_forward
+echo "Docker: $(docker --version 2>/dev/null || echo 'NOT INSTALLED')"
+echo "IPv4 forwarding: $(sysctl -n net.ipv4.ip_forward)"
 echo ""
