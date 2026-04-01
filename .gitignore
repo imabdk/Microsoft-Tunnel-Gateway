@@ -4,8 +4,9 @@
 # Allow shell scripts
 !*.sh
 
-# Ignore mindcore net-diag script
+# Ignore mindcore scripts (customer-funded, not for public repo)
 mst-mindcore-net-diag.sh
+mst-mindcore-health.sh
 
 # Allow README
 !README.md
