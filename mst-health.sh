@@ -83,7 +83,17 @@ if [ -n "$CONTAINER_CMD" ]; then
     if [ -n "$CONTAINERS" ]; then
         echo "$CONTAINERS" | sed 's/^/  /'
         CONTAINER_COUNT=$(echo "$CONTAINERS" | wc -l)
-        echo -e "${GREEN}[OK] $CONTAINER_COUNT container(s) running ($CONTAINER_CMD)${NC}"
+        
+        # Check if all containers are healthy (not just running)
+        UNHEALTHY_CONTAINERS=$(echo "$CONTAINERS" | grep -E "\(health: (starting|unhealthy)\)" || true)
+        
+        if [ -z "$UNHEALTHY_CONTAINERS" ]; then
+            echo -e "${GREEN}[OK] $CONTAINER_COUNT container(s) running and healthy ($CONTAINER_CMD)${NC}"
+        else
+            echo -e "${YELLOW}[WARN] $CONTAINER_COUNT container(s) running but not all healthy${NC}"
+            echo -e "${YELLOW}       Some containers are still starting or unhealthy${NC}"
+            ((ISSUES++))
+        fi
     else
         echo -e "${RED}[FAIL] No containers running${NC}"
         ((ISSUES++))
