@@ -114,29 +114,6 @@ else
     ((ISSUES++))
     ISSUE_LIST+=("[1] Docker/Podman not found")
 fi
-
-echo ""
-echo "Configuration sync status (from logs):"
-CONFIG_APPLIED=$(journalctl -t mstunnel-agent --since "4 hours ago" 2>/dev/null | grep -i "Writing new configuration for Server" | tail -1)
-
-if [ -n "$CONFIG_APPLIED" ]; then
-    echo -e "${GREEN}Configuration successfully applied:${NC}"
-    echo "$CONFIG_APPLIED" | sed 's/^/  /'
-else
-    echo "No configuration sync messages in last 4 hours"
-fi
-
-echo ""
-echo "Active VPN Connections:"
-if command -v mst-cli &> /dev/null; then
-    ACTIVE_CONNECTIONS=$(mst-cli server sessions list 2>/dev/null | grep -c "User:" || echo "0")
-    ACTIVE_CONNECTIONS=${ACTIVE_CONNECTIONS:-0}
-    if [[ "$ACTIVE_CONNECTIONS" =~ ^[0-9]+$ ]] && [ "$ACTIVE_CONNECTIONS" -gt 0 ]; then
-        echo -e "${GREEN}Currently connected clients: $ACTIVE_CONNECTIONS${NC}"
-    else
-        echo "Currently connected clients: 0"
-    fi
-fi
 echo ""
 
 # Configuration files
@@ -162,6 +139,17 @@ for file in "${CONFIG_FILES[@]}"; do
         ISSUE_LIST+=("[2] Configuration file missing: $(basename $file)")
     fi
 done
+
+echo ""
+echo "Configuration sync status (from logs):"
+CONFIG_APPLIED=$(journalctl -t mstunnel-agent --since "4 hours ago" 2>/dev/null | grep -i "Writing new configuration for Server" | tail -1)
+
+if [ -n "$CONFIG_APPLIED" ]; then
+    echo -e "${GREEN}Configuration successfully applied:${NC}"
+    echo "$CONFIG_APPLIED" | sed 's/^/  /'
+else
+    echo "No configuration sync messages in last 4 hours"
+fi
 
 echo ""
 echo "Recent configuration changes:"
@@ -325,6 +313,18 @@ if [ -f "/etc/mstunnel/admin-settings.json" ]; then
     fi
 else
     echo -e "${RED}[FAIL] Config not found${NC}"
+fi
+echo ""
+
+echo "Active VPN Connections:"
+if command -v mst-cli &> /dev/null; then
+    ACTIVE_CONNECTIONS=$(mst-cli server sessions list 2>/dev/null | grep -c "User:" || echo "0")
+    ACTIVE_CONNECTIONS=${ACTIVE_CONNECTIONS:-0}
+    if [[ "$ACTIVE_CONNECTIONS" =~ ^[0-9]+$ ]] && [ "$ACTIVE_CONNECTIONS" -gt 0 ]; then
+        echo -e "${GREEN}Currently connected clients: $ACTIVE_CONNECTIONS${NC}"
+    else
+        echo "Currently connected clients: 0"
+    fi
 fi
 echo ""
 
