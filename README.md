@@ -6,7 +6,7 @@ Automation scripts for deploying and managing Microsoft Tunnel Gateway.
 
 ### Health Check
 
-- `mst-tunnel-health.sh` - Post-installation health validation (service status, containers, certificates, logs, configuration, ports, connectivity)
+- `mst-health.sh` - Post-installation health validation (service status, containers, certificates, logs, configuration, ports, connectivity)
 
 ### Setup
 
@@ -24,13 +24,13 @@ Automation scripts for deploying and managing Microsoft Tunnel Gateway.
 ### Health check (run on tunnel server)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/imabdk/Microsoft-Tunnel-Gateway/main/mst-tunnel-health.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/imabdk/Microsoft-Tunnel-Gateway/main/mst-health.sh | sudo bash
 ```
 
 Or download and run locally:
 
 ```bash
-sudo bash ./mst-tunnel-health.sh
+sudo bash ./mst-health.sh
 ```
 
 ### Setup scripts

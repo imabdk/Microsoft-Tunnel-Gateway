@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ################################################################################
-# mst-tunnel-health - Microsoft Tunnel Gateway Health Check Tool
+# mst-health - Microsoft Tunnel Gateway Health Check Tool
 # Version: 1.0
 #
 # Developed by: Martin Bengtsson | https://imab.dk
@@ -19,9 +19,9 @@
 #   5. Server configuration (routes, DNS, ports)
 #   6. Listening ports (VPN port accessibility)
 #
-# Usage: sudo ./mst-tunnel-health.sh
+# Usage: sudo ./mst-health.sh
 #
-# Download: curl -fsSL https://raw.githubusercontent.com/imabdk/Microsoft-Tunnel-Gateway/refs/heads/master/mst-tunnel-health.sh | sudo bash
+# Download: curl -fsSL https://raw.githubusercontent.com/imabdk/Microsoft-Tunnel-Gateway/refs/heads/master/mst-health.sh | sudo bash
 ################################################################################
 
 RED='\033[0;31m'
@@ -36,7 +36,7 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 echo "================================================================================"
-echo "mst-tunnel-health - Microsoft Tunnel Gateway Health Check"
+echo "mst-health - Microsoft Tunnel Gateway Health Check"
 echo "Martin Bengtsson | imab.dk"
 echo "================================================================================"
 echo ""
