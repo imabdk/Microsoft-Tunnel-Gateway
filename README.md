@@ -43,8 +43,4 @@ sudo bash ./setup-firewall-ubuntu.sh
 
 ## More Information
 
-Read the blog post: [10 days and 10 tips for Microsoft Tunnel Gateway - Day 3](https://www.imab.dk/10-days-and-10-tips-for-microsoft-tunnel-gateway-day-3/)
-
-## Author
-
-Martin Bengtsson - Mindcore
+Blog series: [10 days and 10 tips for Microsoft Tunnel Gateway](https://www.imab.dk/10-days-and-10-tips-for-microsoft-tunnel-gateway/)
