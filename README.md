@@ -1,6 +1,6 @@
 # Microsoft Tunnel Gateway Scripts
 
-Automation scripts for deploying and managing Microsoft Tunnel Gateway.
+Scripts I use for deploying and managing Microsoft Tunnel Gateway servers.
 
 ## Scripts
 
