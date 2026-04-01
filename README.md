@@ -21,7 +21,7 @@ Scripts I use for deploying and managing Microsoft Tunnel Gateway servers.
 
 ## Usage
 
-### Health check (run on tunnel server)
+### Health check
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/imabdk/Microsoft-Tunnel-Gateway/main/mst-health.sh | sudo bash
