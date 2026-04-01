@@ -42,6 +42,7 @@ echo "==========================================================================
 echo ""
 
 ISSUES=0
+ISSUE_LIST=()
 
 # Service & container status
 echo -e "${BLUE}[1] Service & Container Status${NC}"
@@ -63,10 +64,12 @@ if command -v mst-cli &> /dev/null; then
         echo ""
         echo -e "${RED}[FAIL] Service not healthy${NC}"
         ((ISSUES++))
+        ISSUE_LIST+=("[1] mst-cli health check failed (server or agent not healthy)")
     fi
 else
     echo -e "${RED}[FAIL] mst-cli not found${NC}"
     ((ISSUES++))
+    ISSUE_LIST+=("[1] mst-cli command not found")
 fi
 
 echo ""
@@ -90,16 +93,19 @@ if [ -n "$CONTAINER_CMD" ]; then
             echo -e "${YELLOW}[WARN] $CONTAINER_COUNT container(s) running but not all healthy${NC}"
             echo -e "${YELLOW}       Some containers are still starting or unhealthy${NC}"
             ((ISSUES++))
+            ISSUE_LIST+=("[1] Container(s) not fully healthy (starting or unhealthy)")
         else
             echo -e "${GREEN}[OK] $CONTAINER_COUNT container(s) running and healthy ($CONTAINER_CMD)${NC}"
         fi
     else
         echo -e "${RED}[FAIL] No containers running${NC}"
         ((ISSUES++))
+        ISSUE_LIST+=("[1] No containers running")
     fi
 else
     echo -e "${RED}[FAIL] Docker/Podman not found${NC}"
     ((ISSUES++))
+    ISSUE_LIST+=("[1] Docker/Podman not found")
 fi
 
 echo ""
@@ -146,6 +152,7 @@ for file in "${CONFIG_FILES[@]}"; do
     else
         echo -e "${RED}[MISSING]${NC} $file"
         ((ISSUES++))
+        ISSUE_LIST+=("[2] Configuration file missing: $(basename $file)")
     fi
 done
 
@@ -179,6 +186,7 @@ if [ -f "/etc/mstunnel/certs/site.crt" ]; then
     else
         echo -e "${RED}[EXPIRED] ${DAYS_REMAINING#-} days ago ($CERT_EXPIRY)${NC}"
         ((ISSUES++))
+        ISSUE_LIST+=("[3] TLS certificate expired")
     fi
     
     # Show SANs if present
@@ -186,6 +194,7 @@ if [ -f "/etc/mstunnel/certs/site.crt" ]; then
 else
     echo -e "${RED}[FAIL] Certificate not found${NC}"
     ((ISSUES++))
+    ISSUE_LIST+=("[3] TLS certificate not found")
 fi
 echo ""
 
@@ -200,6 +209,7 @@ if [ $ERROR_COUNT -eq 0 ]; then
 else
     echo -e "${RED}[FAIL] $ERROR_COUNT error(s) found (showing last 5)${NC}"
     ((ISSUES++))
+    ISSUE_LIST+=("[4] Errors found in recent logs ($ERROR_COUNT errors)")
     echo ""
     
     # Get last 5 errors and format them cleanly
@@ -208,7 +218,7 @@ else
         grep -v "CheckRevocationOnFullChain" | \
         tail -5 | \
         while IFS= read -r line; do
-            echo -e "${RED}●${NC} $line"
+            echo "  - $line"
         done
     
     echo ""
@@ -244,6 +254,7 @@ if [ -f "/etc/mstunnel/admin-settings.json" ]; then
 else
     echo -e "${RED}[FAIL] Config not found${NC}"
     ((ISSUES++))
+    ISSUE_LIST+=("[5] Configuration file not found (admin-settings.json)")
 fi
 echo ""
 
@@ -255,6 +266,7 @@ if netstat -tuln 2>/dev/null | grep -q ":${LISTEN_PORT} " || ss -tuln 2>/dev/nul
 else
     echo -e "${RED}[FAIL] Not listening on port $LISTEN_PORT${NC}"
     ((ISSUES++))
+    ISSUE_LIST+=("[6] Server not listening on port $LISTEN_PORT")
 fi
 echo ""
 
@@ -262,11 +274,12 @@ echo "==========================================================================
 if [ $ISSUES -eq 0 ]; then
     echo -e "${GREEN}Health check passed${NC}"
 else
-    echo -e "${YELLOW}Found $ISSUES issue(s)${NC}"
+    echo -e "${YELLOW}Found $ISSUES issue(s):${NC}"
+    echo ""
+    for issue in "${ISSUE_LIST[@]}"; do
+        echo "  - $issue"
+    done
 fi
-echo ""
-echo "Test inbound connectivity from an external network:"
-echo "  openssl s_client -connect <tunnel-fqdn>:$LISTEN_PORT"
 echo "================================================================================"
 
 exit $ISSUES
