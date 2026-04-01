@@ -85,14 +85,13 @@ if [ -n "$CONTAINER_CMD" ]; then
         CONTAINER_COUNT=$(echo "$CONTAINERS" | wc -l)
         
         # Check if all containers are healthy (not just running)
-        UNHEALTHY_CONTAINERS=$(echo "$CONTAINERS" | grep -E "\(health: (starting|unhealthy)\)" || true)
-        
-        if [ -z "$UNHEALTHY_CONTAINERS" ]; then
-            echo -e "${GREEN}[OK] $CONTAINER_COUNT container(s) running and healthy ($CONTAINER_CMD)${NC}"
-        else
+        # Match "starting" or "unhealthy" anywhere in status string
+        if echo "$CONTAINERS" | grep -qiE "(starting|unhealthy)"; then
             echo -e "${YELLOW}[WARN] $CONTAINER_COUNT container(s) running but not all healthy${NC}"
             echo -e "${YELLOW}       Some containers are still starting or unhealthy${NC}"
             ((ISSUES++))
+        else
+            echo -e "${GREEN}[OK] $CONTAINER_COUNT container(s) running and healthy ($CONTAINER_CMD)${NC}"
         fi
     else
         echo -e "${RED}[FAIL] No containers running${NC}"
