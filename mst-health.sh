@@ -111,7 +111,7 @@ if [ -n "$CONTAINER_CMD" ]; then
             ((RESTART_ISSUES++))
         fi
         
-        # Get restart count directly from Docker/Podman inspect
+        # Get restart count from Docker inspect (tracks crash-loop restarts only)
         TOTAL_RESTARTS=0
         HIGH_RESTART_CONTAINERS=""
         
@@ -126,13 +126,14 @@ if [ -n "$CONTAINER_CMD" ]; then
             fi
         done < <($CONTAINER_CMD ps --filter "name=mstunnel" --format "{{.Names}}")
         
+        # Report findings
         if [ -n "$HIGH_RESTART_CONTAINERS" ]; then
             echo -e "${RED}  [WARN] Container(s) with excessive restarts (>5):${NC}"
             echo -e "$HIGH_RESTART_CONTAINERS"
         elif [ "$TOTAL_RESTARTS" -gt 0 ]; then
-            echo -e "${YELLOW}  [INFO] Total restarts since container creation: $TOTAL_RESTARTS (within normal range)${NC}"
+            echo -e "${YELLOW}  [INFO] Container restart count: $TOTAL_RESTARTS (crash-loop restarts)${NC}"
         else
-            echo -e "${GREEN}  No container restarts detected${NC}"
+            echo -e "${GREEN}  No crash-loop restarts detected${NC}"
         fi
         
         if [ "$RESTART_ISSUES" -gt 0 ]; then
