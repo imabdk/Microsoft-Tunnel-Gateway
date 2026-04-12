@@ -2,7 +2,7 @@
 
 ################################################################################
 # mst-health - Microsoft Tunnel Gateway Health Check Tool
-# Version: 1.1
+# Version: 1.2
 #
 # Developed by: Martin Bengtsson | https://imab.dk
 # Blog series:  https://www.imab.dk/10-days-and-10-tips-for-microsoft-tunnel-gateway
@@ -12,7 +12,7 @@
 #          Validates service status, configuration, certificates, and logs
 # 
 # Checks performed:
-#   1. Service & container status (mst-cli health, Docker/Podman, restart count)
+#   1. Service & container status (mst-cli health, Docker/Podman, version info)
 #   2. Configuration files (admin-settings.json, certs, keys)
 #   3. Certificate expiration (warns if < 30 days)
 #   4. Recent errors in logs (last 30 minutes)
@@ -98,47 +98,52 @@ if [ -n "$CONTAINER_CMD" ]; then
             echo -e "${GREEN}[OK] $CONTAINER_COUNT container(s) running and healthy ($CONTAINER_CMD)${NC}"
         fi
         
-        # Check for container restarts
+        # Check tunnel version and update status
         echo ""
-        echo "Container restart analysis:"
-        RESTART_ISSUES=0
+        echo "Tunnel version and updates:"
         
-        # Check for active restart loops (container currently restarting)
-        RESTARTING_CONTAINERS=$(echo "$CONTAINERS" | grep -i "restarting")
-        if [ -n "$RESTARTING_CONTAINERS" ]; then
-            echo -e "${RED}  [WARN] Container(s) actively restarting:${NC}"
-            echo "$RESTARTING_CONTAINERS" | sed 's/^/    /'
-            ((RESTART_ISSUES++))
-        fi
-        
-        # Get restart count from Docker inspect (tracks crash-loop restarts only)
-        TOTAL_RESTARTS=0
-        HIGH_RESTART_CONTAINERS=""
-        
-        while IFS= read -r container_name; do
-            RESTART_COUNT=$($CONTAINER_CMD inspect --format='{{.RestartCount}}' "$container_name" 2>/dev/null || echo "0")
-            if [ "$RESTART_COUNT" -gt 5 ]; then
-                HIGH_RESTART_CONTAINERS="${HIGH_RESTART_CONTAINERS}    $container_name: $RESTART_COUNT restarts\n"
-                ((TOTAL_RESTARTS+=RESTART_COUNT))
-                ((RESTART_ISSUES++))
-            elif [ "$RESTART_COUNT" -gt 0 ]; then
-                ((TOTAL_RESTARTS+=RESTART_COUNT))
+        # Get current version from version-info.json
+        if [ -f "/etc/mstunnel/version-info.json" ]; then
+            VERSION_INFO=$(cat /etc/mstunnel/version-info.json 2>/dev/null)
+            
+            # Extract version details
+            AGENT_VERSION=$(echo "$VERSION_INFO" | jq -r '.agent_version // "N/A"')
+            SERVER_VERSION=$(echo "$VERSION_INFO" | jq -r '.mstunnel_version // "N/A"')
+            
+            echo "  Agent: $AGENT_VERSION"
+            echo "  Server: $SERVER_VERSION"
+            
+            # Check when version was last updated (based on file modification time)
+            VERSION_FILE_AGE=$(stat -c %Y /etc/mstunnel/version-info.json 2>/dev/null)
+            CURRENT_TIME=$(date +%s)
+            HOURS_SINCE_UPDATE=$(( ($CURRENT_TIME - $VERSION_FILE_AGE) / 3600 ))
+            
+            if [ "$HOURS_SINCE_UPDATE" -lt 24 ]; then
+                echo -e "${YELLOW}  [INFO] Version updated $HOURS_SINCE_UPDATE hour(s) ago${NC}"
+            elif [ "$HOURS_SINCE_UPDATE" -lt 168 ]; then
+                DAYS_SINCE_UPDATE=$(( $HOURS_SINCE_UPDATE / 24 ))
+                echo -e "  Last updated: $DAYS_SINCE_UPDATE day(s) ago"
+            else
+                VERSION_DATE=$(stat -c %y /etc/mstunnel/version-info.json 2>/dev/null | cut -d' ' -f1)
+                echo -e "  Last updated: $VERSION_DATE"
             fi
-        done < <($CONTAINER_CMD ps --filter "name=mstunnel" --format "{{.Names}}")
-        
-        # Report findings
-        if [ -n "$HIGH_RESTART_CONTAINERS" ]; then
-            echo -e "${RED}  [WARN] Container(s) with excessive restarts (>5):${NC}"
-            echo -e "$HIGH_RESTART_CONTAINERS"
-        elif [ "$TOTAL_RESTARTS" -gt 0 ]; then
-            echo -e "${YELLOW}  [INFO] Container restart count: $TOTAL_RESTARTS (crash-loop restarts)${NC}"
         else
-            echo -e "${GREEN}  No crash-loop restarts detected${NC}"
+            echo -e "${YELLOW}  [WARN] Version info file not found${NC}"
         fi
         
-        if [ "$RESTART_ISSUES" -gt 0 ]; then
-            ((ISSUES++))
-            ISSUE_LIST+=("[1] Container restart issues detected (possible failed update)")
+        # Show SHA256 hashes from images_configured
+        if [ -f "/etc/mstunnel/images_configured" ]; then
+            echo ""
+            echo "  Container image hashes:"
+            while IFS= read -r line; do
+                if [ -n "$line" ]; then
+                    IMAGE_NAME=$(echo "$line" | awk '{print $1}' | sed 's/.*\///')
+                    IMAGE_HASH=$(echo "$line" | grep -oP 'sha256:\K[a-f0-9]{12}')
+                    if [ -n "$IMAGE_HASH" ]; then
+                        echo "    $IMAGE_NAME: $IMAGE_HASH..."
+                    fi
+                fi
+            done < /etc/mstunnel/images_configured
         fi
     else
         echo -e "${RED}[FAIL] No containers running${NC}"
