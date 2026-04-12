@@ -111,18 +111,28 @@ if [ -n "$CONTAINER_CMD" ]; then
             ((RESTART_ISSUES++))
         fi
         
-        # Check for restart events in last 24 hours from logs
-        RESTART_EVENTS=$(journalctl -u docker -u podman --since "24 hours ago" 2>/dev/null | grep -iE "mstunnel.*(restart|stopped|died|killing)" | wc -l)
+        # Get restart count directly from Docker/Podman inspect
+        TOTAL_RESTARTS=0
+        HIGH_RESTART_CONTAINERS=""
         
-        if [ "$RESTART_EVENTS" -gt 5 ]; then
-            echo -e "${RED}  [WARN] $RESTART_EVENTS container restart/stop events in last 24 hours${NC}"
-            echo -e "${YELLOW}    Recent events:${NC}"
-            journalctl -u docker -u podman --since "24 hours ago" 2>/dev/null | grep -iE "mstunnel.*(restart|stopped|died)" | tail -3 | sed 's/^/    /'
-            ((RESTART_ISSUES++))
-        elif [ "$RESTART_EVENTS" -gt 0 ]; then
-            echo -e "${YELLOW}  [INFO] $RESTART_EVENTS restart event(s) in last 24h (within normal range)${NC}"
+        while IFS= read -r container_name; do
+            RESTART_COUNT=$($CONTAINER_CMD inspect --format='{{.RestartCount}}' "$container_name" 2>/dev/null || echo "0")
+            if [ "$RESTART_COUNT" -gt 5 ]; then
+                HIGH_RESTART_CONTAINERS="${HIGH_RESTART_CONTAINERS}    $container_name: $RESTART_COUNT restarts\n"
+                ((TOTAL_RESTARTS+=RESTART_COUNT))
+                ((RESTART_ISSUES++))
+            elif [ "$RESTART_COUNT" -gt 0 ]; then
+                ((TOTAL_RESTARTS+=RESTART_COUNT))
+            fi
+        done < <($CONTAINER_CMD ps --filter "name=mstunnel" --format "{{.Names}}")
+        
+        if [ -n "$HIGH_RESTART_CONTAINERS" ]; then
+            echo -e "${RED}  [WARN] Container(s) with excessive restarts (>5):${NC}"
+            echo -e "$HIGH_RESTART_CONTAINERS"
+        elif [ "$TOTAL_RESTARTS" -gt 0 ]; then
+            echo -e "${YELLOW}  [INFO] Total restarts since container creation: $TOTAL_RESTARTS (within normal range)${NC}"
         else
-            echo -e "${GREEN}  No restart events in last 24 hours${NC}"
+            echo -e "${GREEN}  No container restarts detected${NC}"
         fi
         
         if [ "$RESTART_ISSUES" -gt 0 ]; then
