@@ -2,7 +2,7 @@
 
 ################################################################################
 # mst-health - Microsoft Tunnel Gateway Health Check Tool
-# Version: 1.0
+# Version: 1.1
 #
 # Developed by: Martin Bengtsson | https://imab.dk
 # Blog series:  https://www.imab.dk/10-days-and-10-tips-for-microsoft-tunnel-gateway
@@ -12,7 +12,7 @@
 #          Validates service status, configuration, certificates, and logs
 # 
 # Checks performed:
-#   1. Service & container status (mst-cli health, Docker/Podman)
+#   1. Service & container status (mst-cli health, Docker/Podman, restart count)
 #   2. Configuration files (admin-settings.json, certs, keys)
 #   3. Certificate expiration (warns if < 30 days)
 #   4. Recent errors in logs (last 30 minutes)
@@ -96,6 +96,38 @@ if [ -n "$CONTAINER_CMD" ]; then
             ISSUE_LIST+=("[1] Container(s) not fully healthy (starting or unhealthy)")
         else
             echo -e "${GREEN}[OK] $CONTAINER_COUNT container(s) running and healthy ($CONTAINER_CMD)${NC}"
+        fi
+        
+        # Check for container restarts
+        echo ""
+        echo "Container restart analysis:"
+        RESTART_ISSUES=0
+        
+        # Check for active restart loops (container currently restarting)
+        RESTARTING_CONTAINERS=$(echo "$CONTAINERS" | grep -i "restarting")
+        if [ -n "$RESTARTING_CONTAINERS" ]; then
+            echo -e "${RED}  [WARN] Container(s) actively restarting:${NC}"
+            echo "$RESTARTING_CONTAINERS" | sed 's/^/    /'
+            ((RESTART_ISSUES++))
+        fi
+        
+        # Check for restart events in last 24 hours from logs
+        RESTART_EVENTS=$(journalctl -u docker -u podman --since "24 hours ago" 2>/dev/null | grep -iE "mstunnel.*(restart|stopped|died|killing)" | wc -l)
+        
+        if [ "$RESTART_EVENTS" -gt 5 ]; then
+            echo -e "${RED}  [WARN] $RESTART_EVENTS container restart/stop events in last 24 hours${NC}"
+            echo -e "${YELLOW}    Recent events:${NC}"
+            journalctl -u docker -u podman --since "24 hours ago" 2>/dev/null | grep -iE "mstunnel.*(restart|stopped|died)" | tail -3 | sed 's/^/    /'
+            ((RESTART_ISSUES++))
+        elif [ "$RESTART_EVENTS" -gt 0 ]; then
+            echo -e "${YELLOW}  [INFO] $RESTART_EVENTS restart event(s) in last 24h (within normal range)${NC}"
+        else
+            echo -e "${GREEN}  No restart events in last 24 hours${NC}"
+        fi
+        
+        if [ "$RESTART_ISSUES" -gt 0 ]; then
+            ((ISSUES++))
+            ISSUE_LIST+=("[1] Container restart issues detected (possible failed update)")
         fi
     else
         echo -e "${RED}[FAIL] No containers running${NC}"
