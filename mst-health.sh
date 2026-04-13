@@ -102,24 +102,21 @@ if [ -n "$CONTAINER_CMD" ]; then
         echo ""
         echo "Tunnel version and updates:"
         
-        # Get current version from version-info.json
+        # Get version from container image tags
+        AGENT_VERSION=$($CONTAINER_CMD inspect mstunnel-agent --format='{{.Config.Image}}' 2>/dev/null | grep -oP ':\K[^@]+' || echo "N/A")
+        SERVER_VERSION=$($CONTAINER_CMD inspect mstunnel-server --format='{{.Config.Image}}' 2>/dev/null | grep -oP ':\K[^@]+' || echo "N/A")
+        
+        echo "  Agent:  $AGENT_VERSION"
+        echo "  Server: $SERVER_VERSION"
+        
+        # Check when version was last updated (based on version-info.json modification time)
         if [ -f "/etc/mstunnel/version-info.json" ]; then
-            VERSION_INFO=$(cat /etc/mstunnel/version-info.json 2>/dev/null)
-            
-            # Extract version details
-            AGENT_VERSION=$(echo "$VERSION_INFO" | jq -r '.agent_version // "N/A"')
-            SERVER_VERSION=$(echo "$VERSION_INFO" | jq -r '.mstunnel_version // "N/A"')
-            
-            echo "  Agent: $AGENT_VERSION"
-            echo "  Server: $SERVER_VERSION"
-            
-            # Check when version was last updated (based on file modification time)
             VERSION_FILE_AGE=$(stat -c %Y /etc/mstunnel/version-info.json 2>/dev/null)
             CURRENT_TIME=$(date +%s)
             HOURS_SINCE_UPDATE=$(( ($CURRENT_TIME - $VERSION_FILE_AGE) / 3600 ))
             
             if [ "$HOURS_SINCE_UPDATE" -lt 24 ]; then
-                echo -e "${YELLOW}  [INFO] Version updated $HOURS_SINCE_UPDATE hour(s) ago${NC}"
+                echo -e "${YELLOW}  [INFO] Containers updated $HOURS_SINCE_UPDATE hour(s) ago${NC}"
             elif [ "$HOURS_SINCE_UPDATE" -lt 168 ]; then
                 DAYS_SINCE_UPDATE=$(( $HOURS_SINCE_UPDATE / 24 ))
                 echo -e "  Last updated: $DAYS_SINCE_UPDATE day(s) ago"
@@ -127,23 +124,18 @@ if [ -n "$CONTAINER_CMD" ]; then
                 VERSION_DATE=$(stat -c %y /etc/mstunnel/version-info.json 2>/dev/null | cut -d' ' -f1)
                 echo -e "  Last updated: $VERSION_DATE"
             fi
-        else
-            echo -e "${YELLOW}  [WARN] Version info file not found${NC}"
         fi
         
-        # Show SHA256 hashes from images_configured
-        if [ -f "/etc/mstunnel/images_configured" ]; then
+        # Show SHA256 hashes from version-info.json
+        if [ -f "/etc/mstunnel/version-info.json" ]; then
+            VERSION_INFO=$(cat /etc/mstunnel/version-info.json 2>/dev/null)
+            AGENT_HASH=$(echo "$VERSION_INFO" | jq -r '.AgentImageHash // "N/A"' | cut -c1-12)
+            SERVER_HASH=$(echo "$VERSION_INFO" | jq -r '.ServerImageHash // "N/A"' | cut -c1-12)
+            
             echo ""
             echo "  Container image hashes:"
-            while IFS= read -r line; do
-                if [ -n "$line" ]; then
-                    IMAGE_NAME=$(echo "$line" | awk '{print $1}' | sed 's/.*\///')
-                    IMAGE_HASH=$(echo "$line" | grep -oP 'sha256:\K[a-f0-9]{12}')
-                    if [ -n "$IMAGE_HASH" ]; then
-                        echo "    $IMAGE_NAME: $IMAGE_HASH..."
-                    fi
-                fi
-            done < /etc/mstunnel/images_configured
+            echo "    Agent:  $AGENT_HASH..."
+            echo "    Server: $SERVER_HASH..."
         fi
     else
         echo -e "${RED}[FAIL] No containers running${NC}"
