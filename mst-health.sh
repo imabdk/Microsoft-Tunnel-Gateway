@@ -2,7 +2,7 @@
 
 ################################################################################
 # mst-health - Microsoft Tunnel Gateway Health Check Tool
-# Version: 1.2
+# Version: 1.3
 #
 # Developed by: Martin Bengtsson | https://imab.dk
 # Blog series:  https://www.imab.dk/10-days-and-10-tips-for-microsoft-tunnel-gateway
@@ -18,8 +18,10 @@
 #   4. Recent errors in logs (last 30 minutes)
 #   5. Server configuration (routes, DNS, ports)
 #   6. Listening ports (VPN port accessibility)
+#   7. DNS resolution (tests DNS servers from Tunnel configuration)
 #
-# Usage: sudo ./mst-health.sh
+# Usage: sudo ./mst-health.sh [--dns <hostname>]
+#        --dns (optional): test DNS resolution for this host against Tunnel DNS servers
 #
 # Download: curl -fsSL https://raw.githubusercontent.com/imabdk/Microsoft-Tunnel-Gateway/refs/heads/master/mst-health.sh | sudo bash
 ################################################################################
@@ -29,6 +31,14 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
+
+DNS_TEST_HOST=""
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --dns) DNS_TEST_HOST="$2"; shift 2 ;;
+        *) shift ;;
+    esac
+done
 
 if [ "$EUID" -ne 0 ]; then 
     echo -e "${RED}Error: Run as root${NC}"
@@ -295,6 +305,57 @@ else
     echo -e "${RED}[FAIL] Not listening on port $LISTEN_PORT${NC}"
     ((ISSUES++))
     ISSUE_LIST+=("[6] Server not listening on port $LISTEN_PORT")
+fi
+echo ""
+
+# DNS resolution
+echo -e "${BLUE}[7] DNS Resolution${NC}"
+echo "Testing DNS servers from Tunnel configuration..."
+
+if [ -f "/etc/mstunnel/admin-settings.json" ]; then
+    DNS_SERVERS=$(cat /etc/mstunnel/admin-settings.json 2>/dev/null | jq -r '.DNSServers[]? // empty' 2>/dev/null)
+    if [ -n "$DNS_SERVERS" ]; then
+        DNS_FAIL=0
+        while IFS= read -r DNS_SERVER; do
+            echo ""
+            echo "  $DNS_SERVER:"
+            # Test reachability with a simple query
+            DIG_RESULT=$(dig @"$DNS_SERVER" +time=3 +tries=1 +short version.bind chaos txt 2>&1)
+            DIG_EXIT=$?
+            if [ $DIG_EXIT -eq 0 ] && ! echo "$DIG_RESULT" | grep -qi "timed out\|no servers\|connection refused"; then
+                echo -e "    ${GREEN}[OK] Reachable${NC}"
+            else
+                echo -e "    ${RED}[FAIL] Not responding${NC}"
+                ((DNS_FAIL++))
+                ((ISSUES++))
+                ISSUE_LIST+=("[7] DNS server not reachable: $DNS_SERVER")
+            fi
+            # If test hostname provided, resolve it
+            if [ -n "$DNS_TEST_HOST" ]; then
+                RESOLVE=$(dig @"$DNS_SERVER" "$DNS_TEST_HOST" +time=3 +tries=1 +short 2>&1)
+                if [ -n "$RESOLVE" ] && ! echo "$RESOLVE" | grep -qi "timed out\|no servers\|connection refused"; then
+                    echo -e "    $DNS_TEST_HOST → $RESOLVE"
+                else
+                    echo -e "    ${YELLOW}$DNS_TEST_HOST → no answer${NC}"
+                fi
+            fi
+        done <<< "$DNS_SERVERS"
+        echo ""
+        DNS_TOTAL=$(echo "$DNS_SERVERS" | wc -l)
+        if [ $DNS_FAIL -eq 0 ]; then
+            echo -e "${GREEN}[OK] All $DNS_TOTAL DNS server(s) reachable${NC}"
+        else
+            echo -e "${RED}[FAIL] $DNS_FAIL of $DNS_TOTAL DNS server(s) not reachable${NC}"
+        fi
+        if [ -z "$DNS_TEST_HOST" ]; then
+            echo ""
+            echo "Tip: pass a hostname to test resolution: sudo ./mst-health.sh --dns intranet.contoso.com"
+        fi
+    else
+        echo -e "${YELLOW}[WARN] No DNS servers configured${NC}"
+    fi
+else
+    echo -e "${RED}[FAIL] Config not found${NC}"
 fi
 echo ""
 
