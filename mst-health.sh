@@ -46,7 +46,7 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 echo "================================================================================"
-echo "mst-health - Microsoft Tunnel Gateway Health Check"
+echo "mst-health - Microsoft Tunnel Gateway Health Check v1.3"
 echo "Martin Bengtsson | imab.dk"
 echo "================================================================================"
 echo ""
