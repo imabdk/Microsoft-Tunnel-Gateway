@@ -165,6 +165,7 @@ echo -e "${BLUE}[2] Configuration Files${NC}"
 CONFIG_FILES=(
     "/etc/mstunnel/admin-settings.json"
     "/etc/mstunnel/agent-info.json"
+    "/etc/mstunnel/version-info.json"
     "/etc/mstunnel/ocserv.conf"
     "/etc/mstunnel/env.sh"
     "/etc/mstunnel/certs/site.crt"
