@@ -7,12 +7,15 @@
 # Allow shell scripts (in root and subfolders)
 !*.sh
 
+# Allow PowerShell scripts (in root and subfolders)
+!*.ps1
+
 # Ignore mindcore scripts (customer-funded, not for public repo)
 mst-mindcore-net-diag.sh
 mst-mindcore-health.sh
 
 # Ignore third-party reference scripts (not authored by us)
-Setup scripts/brian.sh
+Setup-Scripts/brian.sh
 
 # Allow README
 !README.md

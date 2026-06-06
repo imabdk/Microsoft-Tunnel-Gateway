@@ -5,7 +5,7 @@
 # Installs system utilities, Docker Engine, and enables IPv4 packet forwarding
 #
 # Note: This script is Ubuntu-specific (uses apt and Docker)
-# Usage: curl -fsSL https://raw.githubusercontent.com/imabdk/Microsoft-Tunnel-Gateway/master/Setup%20scripts/setup-prerequisites-ubuntu.sh | sudo bash
+# Usage: curl -fsSL https://raw.githubusercontent.com/imabdk/Microsoft-Tunnel-Gateway/master/Setup-Scripts/setup-prerequisites-ubuntu.sh | sudo bash
 #
 
 set -e

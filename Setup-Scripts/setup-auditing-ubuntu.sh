@@ -5,7 +5,7 @@
 # Installs auditd and Microsoft Tunnel audit rules
 #
 # Note: This script is Ubuntu-specific (uses apt)
-# Usage: curl -fsSL https://raw.githubusercontent.com/imabdk/Microsoft-Tunnel-Gateway/master/Setup%20scripts/setup-auditing-ubuntu.sh | sudo bash
+# Usage: curl -fsSL https://raw.githubusercontent.com/imabdk/Microsoft-Tunnel-Gateway/master/Setup-Scripts/setup-auditing-ubuntu.sh | sudo bash
 #
 
 set -e

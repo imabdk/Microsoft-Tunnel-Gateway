@@ -5,8 +5,8 @@
 # Configures required inbound ports and enables firewall
 #
 # Note: This script is Ubuntu-specific (uses UFW)
-# Usage: curl -fsSL https://raw.githubusercontent.com/imabdk/Microsoft-Tunnel-Gateway/master/Setup%20scripts/setup-firewall-ubuntu.sh | sudo bash
-# Custom port: curl -fsSL https://raw.githubusercontent.com/imabdk/Microsoft-Tunnel-Gateway/master/Setup%20scripts/setup-firewall-ubuntu.sh | sudo bash -s -- 8443
+# Usage: curl -fsSL https://raw.githubusercontent.com/imabdk/Microsoft-Tunnel-Gateway/master/Setup-Scripts/setup-firewall-ubuntu.sh | sudo bash
+# Custom port: curl -fsSL https://raw.githubusercontent.com/imabdk/Microsoft-Tunnel-Gateway/master/Setup-Scripts/setup-firewall-ubuntu.sh | sudo bash -s -- 8443
 #
 
 set -e
