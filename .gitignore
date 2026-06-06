@@ -17,6 +17,9 @@ mst-mindcore-health.sh
 # Ignore third-party reference scripts (not authored by us)
 Setup-Scripts/brian.sh
 
+# Tunnel Health scripts - not ready for public repo yet
+Tunnel-Health/
+
 # Allow README
 !README.md
 
