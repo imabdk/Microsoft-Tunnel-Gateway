@@ -1,12 +1,18 @@
 # Ignore everything
 *
 
-# Allow shell scripts
+# Allow directories (so git can descend into subfolders)
+!*/
+
+# Allow shell scripts (in root and subfolders)
 !*.sh
 
 # Ignore mindcore scripts (customer-funded, not for public repo)
 mst-mindcore-net-diag.sh
 mst-mindcore-health.sh
+
+# Ignore third-party reference scripts (not authored by us)
+Setup scripts/brian.sh
 
 # Allow README
 !README.md
