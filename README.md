@@ -36,9 +36,17 @@ sudo bash ./mst-health.sh
 ### Setup scripts
 
 ```bash
-sudo bash ./setup-prerequisites-ubuntu.sh
-sudo bash ./setup-auditing-ubuntu.sh
-sudo bash ./setup-firewall-ubuntu.sh
+curl -fsSL https://raw.githubusercontent.com/imabdk/Microsoft-Tunnel-Gateway/master/Setup%20scripts/setup-prerequisites-ubuntu.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/imabdk/Microsoft-Tunnel-Gateway/master/Setup%20scripts/setup-auditing-ubuntu.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/imabdk/Microsoft-Tunnel-Gateway/master/Setup%20scripts/setup-firewall-ubuntu.sh | sudo bash
+```
+
+Or download and run locally:
+
+```bash
+sudo bash ./"Setup scripts"/setup-prerequisites-ubuntu.sh
+sudo bash ./"Setup scripts"/setup-auditing-ubuntu.sh
+sudo bash ./"Setup scripts"/setup-firewall-ubuntu.sh
 ```
 
 ## More Information
