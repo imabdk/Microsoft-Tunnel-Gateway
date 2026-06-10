@@ -1,14 +1,17 @@
 #!/bin/bash
 #
-# Ubuntu UFW Firewall Configuration for Microsoft Tunnel Gateway
-# For Ubuntu Server 22.04 LTS / 24.04 LTS
-# Configures required inbound ports and enables firewall
+# setup-firewall-ubuntu.sh
+# Microsoft Tunnel Gateway | Lab & Reference Scripts
+# Author: Martin Bengtsson | https://www.imab.dk
 #
-# Note: This script is Ubuntu-specific (uses UFW)
+# Purpose: Configures required inbound ports and enables firewall
+# Supported: Ubuntu Server 22.04 LTS / 24.04 LTS
+# Note: Ubuntu-specific (uses UFW)
 # Usage: curl -fsSL https://raw.githubusercontent.com/imabdk/Microsoft-Tunnel-Gateway/master/Setup-Scripts/setup-firewall-ubuntu.sh | sudo bash
 # Custom port: curl -fsSL https://raw.githubusercontent.com/imabdk/Microsoft-Tunnel-Gateway/master/Setup-Scripts/setup-firewall-ubuntu.sh | sudo bash -s -- 8443
 #
 
+# Exit immediately if any command returns a non-zero exit code
 set -e
 
 echo "=========================================="
@@ -38,6 +41,7 @@ SSH_PORT=${SSH_PORT:-22}
 echo "  SSH port: $SSH_PORT"
 
 # Tunnel port: use argument if provided, otherwise default to 443
+# Override example: sudo bash setup-firewall-ubuntu.sh 8443
 TUNNEL_PORT=${1:-443}
 
 echo "[3/7] Configuring explicit firewall rules (safety net)..."
@@ -65,6 +69,7 @@ else
 fi
 
 echo "[5/7] Discovering other externally-listening services..."
+# ss is preferred over netstat - it's built into iproute2 and available without additional packages
 # Collect all local IPv4 addresses for matching
 LOCAL_IPS=$(hostname --all-ip-addresses 2>/dev/null)
 
@@ -106,7 +111,7 @@ ss --listening --tcp --udp --no-header --numeric --processes 2>/dev/null | while
 
     # Extract process name from users:(("name",pid=...,fd=...))
     proc=$(echo "$proc_info" | sed -n 's/.*"\([^"]*\)".*/\1/p')
-    # Sanitize: allow only alphanumerics, dash, underscore, dot
+    # Sanitize process name - UFW comment strings must not contain special characters
     proc=$(echo "$proc" | tr -cd '[:alnum:]._-')
     proc="${proc:-unknown}"
 
@@ -118,6 +123,8 @@ echo "[6/7] Setting default policies and enabling firewall..."
 ufw default deny incoming
 ufw default allow outgoing
 
+# Safety net: if running over SSH, give a chance to cancel before the firewall activates
+# The SSH rule has already been added above, but this provides a visible warning
 if [ -n "$SSH_CONNECTION" ]; then
     echo "  WARNING: You are connected via SSH"
     echo "  SSH port $SSH_PORT has been allowed"

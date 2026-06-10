@@ -1,13 +1,16 @@
 #!/bin/bash
 #
-# Ubuntu System Auditing Setup for Microsoft Tunnel Gateway
-# For Ubuntu Server 22.04 LTS / 24.04 LTS
-# Installs auditd and Microsoft Tunnel audit rules
+# setup-auditing-ubuntu.sh
+# Microsoft Tunnel Gateway | Lab & Reference Scripts
+# Author: Martin Bengtsson | https://www.imab.dk
 #
-# Note: This script is Ubuntu-specific (uses apt)
+# Purpose: Installs auditd and Microsoft Tunnel audit rules
+# Supported: Ubuntu Server 22.04 LTS / 24.04 LTS
+# Note: Ubuntu-specific (uses apt)
 # Usage: curl -fsSL https://raw.githubusercontent.com/imabdk/Microsoft-Tunnel-Gateway/master/Setup-Scripts/setup-auditing-ubuntu.sh | sudo bash
 #
 
+# Exit immediately if any command returns a non-zero exit code
 set -e
 
 echo "=========================================="
@@ -34,6 +37,7 @@ apt update
 apt install -y auditd audispd-plugins
 
 echo "[3/5] Downloading Microsoft Tunnel audit rules..."
+# aka.ms/TunnelAuditdRules redirects to the official Microsoft Tunnel auditd rules on GitHub
 curl -fsSL https://aka.ms/TunnelAuditdRules -o /tmp/mst.rules
 if [ ! -s /tmp/mst.rules ]; then
     echo "ERROR: Failed to download audit rules"
@@ -45,6 +49,8 @@ cp /tmp/mst.rules /etc/audit/rules.d/mst.rules
 rm /tmp/mst.rules
 
 echo "[5/5] Loading audit rules..."
+# augenrules compiles all files in /etc/audit/rules.d/ and loads them into the kernel
+# This is persistent across reboots, unlike auditctl which only applies rules for the current session
 augenrules --load
 systemctl restart auditd
 

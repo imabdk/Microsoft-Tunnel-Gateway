@@ -1,13 +1,16 @@
 #!/bin/bash
 #
-# Ubuntu Prerequisites Setup for Microsoft Tunnel Gateway
-# For Ubuntu Server 22.04 LTS / 24.04 LTS
-# Installs system utilities, Docker Engine, and enables IPv4 packet forwarding
+# setup-prerequisites-ubuntu.sh
+# Microsoft Tunnel Gateway | Lab & Reference Scripts
+# Author: Martin Bengtsson | https://www.imab.dk
 #
-# Note: This script is Ubuntu-specific (uses apt and Docker)
+# Purpose: Installs system utilities, Docker Engine, and enables IPv4 packet forwarding
+# Supported: Ubuntu Server 22.04 LTS / 24.04 LTS
+# Note: Ubuntu-specific (uses apt and Docker)
 # Usage: curl -fsSL https://raw.githubusercontent.com/imabdk/Microsoft-Tunnel-Gateway/master/Setup-Scripts/setup-prerequisites-ubuntu.sh | sudo bash
 #
 
+# Exit immediately if any command returns a non-zero exit code
 set -e
 
 echo "=========================================="
@@ -34,6 +37,7 @@ if command -v docker &> /dev/null; then
     echo "  Docker is already installed: $(docker --version)"
     echo "  Skipping Docker installation"
 else
+    # Uses the newer DEB822 format (.sources) rather than the legacy single-line .list format
     echo "  Adding Docker's official GPG key..."
     install -m 0755 -d /etc/apt/keyrings
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
@@ -43,7 +47,7 @@ else
     tee /etc/apt/sources.list.d/docker.sources > /dev/null <<EOF
 Types: deb
 URIs: https://download.docker.com/linux/ubuntu
-Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
+Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")  # UBUNTU_CODENAME is set on 24.04+, VERSION_CODENAME is the fallback for 22.04
 Components: stable
 Signed-By: /etc/apt/keyrings/docker.asc
 EOF
@@ -70,6 +74,7 @@ else
     else
         echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
     fi
+    # Applies updated kernel parameters immediately - no reboot required
     sysctl -p > /dev/null
     echo "  IPv4 forwarding enabled"
 fi
