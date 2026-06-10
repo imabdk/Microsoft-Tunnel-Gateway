@@ -14,8 +14,8 @@
 set -e
 
 echo "=========================================="
-echo "Microsoft Tunnel Gateway Prerequisites"
-echo "Ubuntu Server Setup"
+echo "Prerequisites Setup"
+echo "Microsoft Tunnel Gateway"
 echo "=========================================="
 echo ""
 
