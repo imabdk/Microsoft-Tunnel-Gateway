@@ -51,18 +51,18 @@ rm /tmp/mst.rules
 echo "[5/5] Loading audit rules..."
 # augenrules compiles all files in /etc/audit/rules.d/ and loads them into the kernel
 # This is persistent across reboots, unlike auditctl which only applies rules for the current session
-# NOTE: The Tunnel audit rules reference paths under /etc/mstunnel which only exist after mstunnel-setup
-# has been run. If loading fails here, run: sudo augenrules --load && sudo systemctl restart auditd
-# after the Tunnel installation is complete.
-if [ -d "/etc/mstunnel" ]; then
-    augenrules --load
-    systemctl restart auditd
-else
-    echo "  WARNING: /etc/mstunnel does not exist - Microsoft Tunnel is not yet installed"
-    echo "  Audit rules have been installed to /etc/audit/rules.d/mst.rules but not loaded"
-    echo "  After running mstunnel-setup, load the rules with:"
-    echo "    sudo augenrules --load && sudo systemctl restart auditd"
+# The Tunnel audit rules reference specific paths under /etc/mstunnel. On newer kernels, augenrules
+# will fail if those paths don't exist yet. We create placeholder files/dirs here so the rules load
+# successfully regardless of whether Tunnel is installed. mstunnel-setup will overwrite them as needed.
+if [ ! -d "/etc/mstunnel" ]; then
+    echo "  /etc/mstunnel not found - creating placeholder structure for audit rule loading..."
+    mkdir -p /etc/mstunnel/messages/in
+    mkdir -p /etc/mstunnel/messages/out
+    touch /etc/mstunnel/mstunnel-agent-state
+    touch /etc/mstunnel/mstunnel-server-state
 fi
+augenrules --load
+systemctl restart auditd
 
 echo ""
 echo "=========================================="
