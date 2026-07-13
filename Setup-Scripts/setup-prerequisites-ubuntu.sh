@@ -47,7 +47,8 @@ else
     tee /etc/apt/sources.list.d/docker.sources > /dev/null <<EOF
 Types: deb
 URIs: https://download.docker.com/linux/ubuntu
-Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")  # UBUNTU_CODENAME is set on 24.04+, VERSION_CODENAME is the fallback for 22.04
+# UBUNTU_CODENAME is set on Ubuntu 24.04+; VERSION_CODENAME is the fallback for 22.04
+Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
 Components: stable
 Signed-By: /etc/apt/keyrings/docker.asc
 EOF
