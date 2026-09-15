@@ -13,6 +13,9 @@
 # Exit immediately if any command returns a non-zero exit code
 set -e
 
+# Prevents apt/dpkg from popping debconf dialogs (e.g. keyboard-configuration) when piped via curl | sudo bash
+export DEBIAN_FRONTEND=noninteractive
+
 echo "=========================================="
 echo "Prerequisites Setup"
 echo "Microsoft Tunnel Gateway"
